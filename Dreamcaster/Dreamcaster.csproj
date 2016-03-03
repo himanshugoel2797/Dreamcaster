@@ -44,13 +44,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
-    <Compile Include="CPU\Core\MemoryMappedRegister.cs" />
     <Compile Include="CPU\Core\PhysicalMemoryBackend.cs" />
+    <Compile Include="CPU\Core\PhysicalMemoryMapping.cs" />
     <Compile Include="CPU\Core\ProcessorException.cs" />
     <Compile Include="CPU\Core\Register.cs" />
     <Compile Include="CPU\Core\RegisterFile.cs" />
-    <Compile Include="CPU\Core\VirtualMemoryBackend.cs" />
     <Compile Include="CPU\MMU.cs" />
+    <Compile Include="CPU\MMUEntry.cs" />
     <Compile Include="CPU\Processor.cs" />
     <Compile Include="CPU\ProcessorModes.cs" />
     <Compile Include="FPU\DenormalizationMode.cs" />

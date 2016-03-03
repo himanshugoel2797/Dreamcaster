@@ -9,100 +9,120 @@ namespace Dreamcaster.CPU.Core
 {
     public class PhysicalMemoryBackend
     {
-        MemoryStream memory;
+        List<PhysicalMemoryMapping> Mappings;
+        // The SH-4 supports a 29bit physical address space
+
+        private PhysicalMemoryMapping TranslateAddress(uint addr)
+        {
+            for (int i = 0; i < Mappings.Count; i++)
+            {
+                if (Mappings[i].StartAddr <= addr && Mappings[i].EndAddr > addr) return Mappings[i];
+            }
+            throw new ProcessorException("Invalid Memory Access!");
+        }
 
         public PhysicalMemoryBackend(int len)
         {
-            memory = new MemoryStream(len);
+            Mappings = new List<PhysicalMemoryMapping>();
         }
 
-        #region Signed Access
-        public int ReadInt32(uint offset)
+        public void RegisterMapping(PhysicalMemoryMapping map)
         {
-            memory.Seek(offset, SeekOrigin.Begin);
-            byte[] tmp = new byte[sizeof(int)];
-            memory.Read(tmp, 0, sizeof(int));
-            return BitConverter.ToInt32(tmp, 0);
+            for (int i = 0; i < Mappings.Count; i++)
+            {
+                if ((Mappings[i].StartAddr <= map.StartAddr && Mappings[i].EndAddr > map.StartAddr) | (Mappings[i].StartAddr <= map.EndAddr && Mappings[i].EndAddr >= map.EndAddr))
+                    throw new Exception("Attempt to perform invalid mapping!");
+            }
+
+            Mappings.Add(map);
         }
 
-        public short ReadInt16(uint offset)
+        #region Read from memory
+        public int ReadInt32(uint addr)
         {
-            memory.Seek(offset, SeekOrigin.Begin);
-            byte[] tmp = new byte[sizeof(short)];
-            memory.Read(tmp, 0, sizeof(short));
-            return BitConverter.ToInt16(tmp, 0);
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanRead) throw new Exception("Invalid Memory Access!");
+            return tmp.ReadInt32(addr);
         }
 
-        public sbyte ReadInt8(uint offset)
+        public short ReadInt16(uint addr)
         {
-            memory.Seek(offset, SeekOrigin.Begin);
-            return (sbyte)memory.ReadByte();
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanRead) throw new Exception("Invalid Memory Access!");
+            return tmp.ReadInt16(addr);
+        }
+
+        public sbyte ReadInt8(uint addr)
+        {
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanRead) throw new Exception("Invalid Memory Access!");
+            return tmp.ReadInt8(addr);
+        }
+
+        public uint ReadUInt32(uint addr)
+        {
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanRead) throw new Exception("Invalid Memory Access!");
+            return tmp.ReadUInt32(addr);
+        }
+
+        public ushort ReadUInt16(uint addr)
+        {
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanRead) throw new Exception("Invalid Memory Access!");
+            return tmp.ReadUInt16(addr);
+        }
+
+        public byte ReadUInt8(uint addr)
+        {
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanRead) throw new Exception("Invalid Memory Access!");
+            return tmp.ReadUInt8(addr);
         }
         #endregion
 
-        #region Unsigned Access
-        public uint ReadUInt32(uint offset)
+        #region Write to memory
+        public void WriteInt32(uint addr, int val)
         {
-            memory.Seek(offset, SeekOrigin.Begin);
-            byte[] tmp = new byte[sizeof(uint)];
-            memory.Read(tmp, 0, sizeof(uint));
-            return BitConverter.ToUInt32(tmp, 0);
-        }
-
-        public ushort ReadUInt16(uint offset)
-        {
-            memory.Seek(offset, SeekOrigin.Begin);
-            byte[] tmp = new byte[sizeof(ushort)];
-            memory.Read(tmp, 0, sizeof(ushort));
-            return BitConverter.ToUInt16(tmp, 0);
-        }
-
-        public byte ReadUInt8(uint offset)
-        {
-            memory.Seek(offset, SeekOrigin.Begin);
-            return (byte)memory.ReadByte();
-        }
-        #endregion
-
-        #region Signed Write
-        public void WriteInt8(uint addr, sbyte val)
-        {
-            memory.Seek(addr, SeekOrigin.Begin);
-            memory.WriteByte((byte)val);
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanWrite) throw new Exception("Invalid Memory Write!");
+            tmp.WriteInt32(addr, val);
         }
 
         public void WriteInt16(uint addr, short val)
         {
-            memory.Seek(addr, SeekOrigin.Begin);
-            memory.Write(BitConverter.GetBytes(val), 0, sizeof(short));
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanWrite) throw new Exception("Invalid Memory Write!");
+            tmp.WriteInt16(addr, val);
         }
 
-        public void WriteInt32(uint addr, int val)
+        public void WriteInt8(uint addr, sbyte val)
         {
-            memory.Seek(addr, SeekOrigin.Begin);
-            memory.Write(BitConverter.GetBytes(val), 0, sizeof(int));
-        }
-        #endregion
-
-        #region Unsigned Write
-        public void WriteUInt8(uint addr, byte val)
-        {
-            memory.Seek(addr, SeekOrigin.Begin);
-            memory.WriteByte(val);
-        }
-
-        public void WriteUInt16(uint addr, ushort val)
-        {
-            memory.Seek(addr, SeekOrigin.Begin);
-            memory.Write(BitConverter.GetBytes(val), 0, sizeof(ushort));
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanWrite) throw new Exception("Invalid Memory Write!");
+            tmp.WriteInt8(addr, val);
         }
 
         public void WriteUInt32(uint addr, uint val)
         {
-            memory.Seek(addr, SeekOrigin.Begin);
-            memory.Write(BitConverter.GetBytes(val), 0, sizeof(uint));
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanWrite) throw new Exception("Invalid Memory Write!");
+            tmp.WriteUInt32(addr, val);
+        }
+
+        public void WriteUInt16(uint addr, ushort val)
+        {
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanWrite) throw new Exception("Invalid Memory Write!");
+            tmp.WriteUInt16(addr, val);
+        }
+
+        public void WriteUInt8(uint addr, byte val)
+        {
+            var tmp = TranslateAddress(addr);
+            if (!tmp.CanWrite) throw new Exception("Invalid Memory Write!");
+            tmp.WriteUInt8(addr, val);
         }
         #endregion
-
     }
 }
